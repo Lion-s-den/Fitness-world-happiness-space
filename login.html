@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login – Fitness World Happiness Space</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/auth.css">
+</head>
+<body>
+  <div id="header"></div>
+
+  <main class="main-content">
+    <div class="auth-wrapper">
+      <div class="auth-card">
+        <h1>Welcome Back</h1>
+        <p class="subtitle">Login to your Fitness World Happiness Space account</p>
+
+        <div id="alert" class="alert" style="display: none;"></div>
+
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required placeholder="you@example.com" autocomplete="email">
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required placeholder="••••••••" autocomplete="current-password">
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block" id="submitBtn">
+            Login
+          </button>
+        </form>
+
+        <p class="auth-footer">
+          Don't have an account? <a href="signup.html">Sign Up</a>
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <div id="footer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/footer.js"></script>
+
+  <script>
+    // Redirect if already logged in
+    (async () => {
+      const session = await window.auth.getSession();
+      if (session) window.location.href = 'dashboard.html';
+    })();
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const submitBtn = document.getElementById('submitBtn');
+      const alertBox = document.getElementById('alert');
+
+      alertBox.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Logging in...';
+
+      const result = await window.auth.signIn(email, password);
+
+      if (result.success) {
+        window.location.href = 'dashboard.html';
+      } else {
+        alertBox.className = 'alert alert-error';
+        alertBox.textContent = result.error || 'Invalid email or password.';
+        alertBox.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Login';
+      }
+    });
+  </script>
+</body>
+</html>
