@@ -1,15 +1,21 @@
 // Authentication Logic for Fitness World Happiness Space
 
+function getClient() {
+  if (!window.supabaseClient) {
+    throw new Error('Supabase is not loaded. Please refresh the page and try again.');
+  }
+  return window.supabaseClient;
+}
+
 /**
  * Sign up a new user
- * @param {string} email 
- * @param {string} password 
- * @param {string} fullName 
  */
 async function signUp(email, password, fullName) {
   try {
+    const client = getClient();
+
     // 1. Create auth user
-    const { data, error } = await window.supabaseClient.auth.signUp({
+    const { data, error } = await client.auth.signUp({
       email: email,
       password: password,
       options: {
@@ -23,7 +29,7 @@ async function signUp(email, password, fullName) {
 
     // 2. Create profile in profiles table (if user was created)
     if (data.user) {
-      const { error: profileError } = await window.supabaseClient
+      const { error: profileError } = await client
         .from('profiles')
         .upsert({
           id: data.user.id,
@@ -42,18 +48,18 @@ async function signUp(email, password, fullName) {
     return { success: true, data };
   } catch (error) {
     console.error('Sign up error:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error.message || String(error) };
   }
 }
 
 /**
  * Sign in existing user
- * @param {string} email 
- * @param {string} password 
  */
 async function signIn(email, password) {
   try {
-    const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+    const client = getClient();
+
+    const { data, error } = await client.auth.signInWithPassword({
       email: email,
       password: password
     });
@@ -62,7 +68,7 @@ async function signIn(email, password) {
     return { success: true, data };
   } catch (error) {
     console.error('Sign in error:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error.message || String(error) };
   }
 }
 
@@ -71,12 +77,13 @@ async function signIn(email, password) {
  */
 async function signOut() {
   try {
-    const { error } = await window.supabaseClient.auth.signOut();
+    const client = getClient();
+    const { error } = await client.auth.signOut();
     if (error) throw error;
     window.location.href = 'index.html';
   } catch (error) {
     console.error('Sign out error:', error);
-    alert('Error signing out: ' + error.message);
+    alert('Error signing out: ' + (error.message || error));
   }
 }
 
@@ -85,7 +92,8 @@ async function signOut() {
  */
 async function getSession() {
   try {
-    const { data: { session }, error } = await window.supabaseClient.auth.getSession();
+    const client = getClient();
+    const { data: { session }, error } = await client.auth.getSession();
     if (error) throw error;
     return session;
   } catch (error) {
@@ -99,10 +107,11 @@ async function getSession() {
  */
 async function getUserProfile() {
   try {
-    const { data: { user } } = await window.supabaseClient.auth.getUser();
+    const client = getClient();
+    const { data: { user } } = await client.auth.getUser();
     if (!user) return null;
 
-    const { data, error } = await window.supabaseClient
+    const { data, error } = await client
       .from('profiles')
       .select('*')
       .eq('id', user.id)
@@ -130,10 +139,11 @@ async function getUserProfile() {
  */
 async function updateProfile(updates) {
   try {
-    const { data: { user } } = await window.supabaseClient.auth.getUser();
+    const client = getClient();
+    const { data: { user } } = await client.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    const { data, error } = await window.supabaseClient
+    const { data, error } = await client
       .from('profiles')
       .upsert({
         id: user.id,
@@ -147,7 +157,7 @@ async function updateProfile(updates) {
     return { success: true, data };
   } catch (error) {
     console.error('Update profile error:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error.message || String(error) };
   }
 }
 
